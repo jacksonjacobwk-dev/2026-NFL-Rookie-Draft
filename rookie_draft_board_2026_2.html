@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2026 Rookie Draft Board</title>
+<style>
+  :root {
+    --bg:#0f1117;--surface:#181c27;--surface2:#1e2334;--border:#2a3050;
+    --accent:#4f8ef7;--accent2:#f7a44f;--text:#e8eaf2;--text2:#8b92b0;--text3:#4e5470;
+    --success:#3ecf8e;--danger:#f76f6f;
+    --badge-qb-bg:#2d2060;--badge-qb:#a990f5;
+    --badge-rb-bg:#0f2e22;--badge-rb:#3ecf8e;
+    --badge-wr-bg:#0f2040;--badge-wr:#4f8ef7;
+    --badge-te-bg:#2e1c0a;--badge-te:#f7a44f;
+    --badge-lb-bg:#2e1a1a;--badge-lb:#f76f6f;
+    --badge-edge-bg:#1a1a2e;--badge-edge:#c77dff;
+    --badge-db-bg:#1a2e2a;--badge-db:#48cae4;
+    --badge-dl-bg:#2e2a1a;--badge-dl:#ffd166;
+    --radius:8px;--radius-sm:5px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;}
+
+  #setupScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;}
+  .setup-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;max-width:480px;width:100%;}
+  .setup-card h1{font-size:1.5rem;font-weight:700;margin-bottom:.25rem;}
+  .setup-sub{font-size:13px;color:var(--text2);margin-bottom:2rem;}
+  .field{margin-bottom:1.25rem;}
+  .field label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .field input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s;}
+  .field input:focus{border-color:var(--accent);}
+  .btn-primary{width:100%;padding:12px;background:var(--accent);color:#fff;font-weight:600;font-size:15px;border:none;border-radius:var(--radius);cursor:pointer;}
+  .btn-primary:hover{opacity:.88;}
+  .or-div{text-align:center;font-size:12px;color:var(--text3);margin:1.25rem 0;}
+  .btn-secondary{width:100%;padding:10px;background:transparent;color:var(--text2);font-size:13px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;}
+  .btn-secondary:hover{border-color:var(--text2);color:var(--text);}
+  .share-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--accent);word-break:break-all;margin-top:1rem;display:none;}
+  .copy-btn{margin-top:8px;padding:6px 14px;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;}
+  .copy-btn:hover{background:var(--accent);color:#fff;}
+  .err{font-size:12px;color:var(--danger);margin-top:8px;display:none;}
+  .help{font-size:12px;color:var(--text3);margin-top:5px;line-height:1.5;}
+
+  #draftApp{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+  .topbar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+  .topbar h1{font-size:14px;font-weight:700;flex:1;}
+  .clock-badge{background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;white-space:nowrap;}
+  .clock-badge.done{background:var(--success);}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 5px var(--success);}
+  .sync-dot.syncing{background:var(--accent2);box-shadow:0 0 5px var(--accent2);}
+  .sync-dot.error{background:var(--danger);box-shadow:none;}
+  .share-pill{font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--border);color:var(--text2);cursor:pointer;background:transparent;}
+  .share-pill:hover{border-color:var(--text2);color:var(--text);}
+  .main{display:flex;flex:1;overflow:hidden;}
+
+  .pool{width:320px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);}
+  .pool-header{padding:10px 10px 8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .pool-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+  .search-row input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;color:var(--text);font-size:13px;outline:none;}
+  .search-row input:focus{border-color:var(--accent);}
+  .pos-filters{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+  .pf{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;}
+  .pf.active{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.12);}
+  .player-list{flex:1;overflow-y:auto;padding:5px;display:flex;flex-direction:column;gap:3px;}
+  .player-row{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer;}
+  .player-row:hover{background:var(--surface2);border-color:var(--border);}
+  .player-row.drafted{opacity:.22;pointer-events:none;}
+  .rank{font-size:10px;color:var(--text3);min-width:20px;text-align:right;flex-shrink:0;}
+  .pos-badge{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;min-width:32px;text-align:center;flex-shrink:0;}
+  .pos-QB{background:var(--badge-qb-bg);color:var(--badge-qb);}
+  .pos-RB{background:var(--badge-rb-bg);color:var(--badge-rb);}
+  .pos-WR{background:var(--badge-wr-bg);color:var(--badge-wr);}
+  .pos-TE{background:var(--badge-te-bg);color:var(--badge-te);}
+  .pos-LB{background:var(--badge-lb-bg);color:var(--badge-lb);}
+  .pos-EDGE{background:var(--badge-edge-bg);color:var(--badge-edge);}
+  .pos-DB{background:var(--badge-db-bg);color:var(--badge-db);}
+  .pos-DL{background:var(--badge-dl-bg);color:var(--badge-dl);}
+  .pname{font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pteam{font-size:10px;color:var(--text3);flex-shrink:0;}
+  .draft-btn{font-size:10px;padding:2px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;flex-shrink:0;}
+  .draft-btn:hover{border-color:var(--success);color:var(--success);}
+
+  .board{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  .board-tabs{display:flex;gap:4px;padding:10px 12px 0;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .btab{font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px 6px 0 0;border:1px solid transparent;border-bottom:none;color:var(--text2);background:transparent;cursor:pointer;}
+  .btab.active{background:var(--surface2);color:var(--text);border-color:var(--border);border-bottom-color:var(--surface2);position:relative;bottom:-1px;}
+  .board-content{flex:1;overflow-y:auto;padding:12px;}
+
+  .round-block{margin-bottom:1.5rem;}
+  .round-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+  .pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:6px;}
+  .pick-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;min-height:70px;display:flex;flex-direction:column;gap:3px;position:relative;}
+  .pick-card.current{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+  .pick-card.traded-in{border-color:rgba(247,164,79,.4);}
+  .pick-top{display:flex;align-items:center;gap:5px;}
+  .pick-lbl{font-size:10px;font-weight:700;color:var(--text3);}
+  .pick-owner{font-size:11px;font-weight:600;color:var(--text2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pick-orig{font-size:9px;color:var(--accent2);flex-shrink:0;}
+  .pick-player-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pick-nfl{font-size:10px;color:var(--text3);}
+  .pick-empty{font-size:11px;color:var(--text3);margin-top:2px;}
+  .undo-x{position:absolute;top:5px;right:5px;font-size:10px;color:var(--text3);cursor:pointer;background:none;border:none;padding:2px 4px;border-radius:3px;}
+  .undo-x:hover{color:var(--danger);background:rgba(247,111,111,.1);}
+
+  .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .team-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
+  .team-card-name{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;}
+  .team-pick-row{display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);}
+  .team-pick-row:last-child{border-bottom:none;}
+  .tp-lbl{font-size:10px;color:var(--text3);min-width:30px;}
+  .tp-orig{font-size:9px;color:var(--accent2);}
+  .empty-team{font-size:12px;color:var(--text3);padding:6px 0;}
+  .empty-msg{font-size:13px;color:var(--text3);padding:1.5rem;text-align:center;}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+</style>
+</head>
+<body>
+
+<div id="setupScreen">
+  <div class="setup-card">
+    <h1>🏈 2026 Rookie Draft Board</h1>
+    <p class="setup-sub">Live shared · Levi, Tanner, Morgan, Jeremy, Kiece, Mason, Mitch, Tyler, Kolten, Jayden, John, Jacob</p>
+    <div class="field">
+      <label>JSONBin Access Key</label>
+      <input type="password" id="apiKey" placeholder="$2a$10$..." />
+      <p class="help">Free at <a href="https://jsonbin.io" target="_blank" style="color:var(--accent)">jsonbin.io</a> → Sign up → Access Keys → Create Key</p>
+    </div>
+    <button class="btn-primary" onclick="createDraft()">Create Draft &amp; Get Share Link</button>
+    <p id="createError" class="err"></p>
+    <div id="shareBox" class="share-box"></div>
+    <button id="copyBtn" class="copy-btn" style="display:none" onclick="copyUrl()">Copy Share Link</button>
+    <div class="or-div">— or join an existing draft —</div>
+    <div class="field">
+      <label>Bin ID (from share link)</label>
+      <input type="text" id="joinBinId" placeholder="67f3a..." />
+    </div>
+    <div class="field">
+      <label>Access Key</label>
+      <input type="password" id="joinKey" placeholder="$2a$10$..." />
+    </div>
+    <button class="btn-secondary" onclick="joinDraft()">Join Draft</button>
+    <p id="joinError" class="err"></p>
+  </div>
+</div>
+
+<div id="draftApp">
+  <div class="topbar">
+    <h1>🏈 2026 Rookie Draft</h1>
+    <div id="clockBadge" class="clock-badge">Loading…</div>
+    <button class="share-pill" onclick="showShare()">📋 Share Link</button>
+    <div id="syncDot" class="sync-dot" title="Synced"></div>
+  </div>
+  <div class="main">
+    <div class="pool">
+      <div class="pool-header">
+        <div class="pool-label">Player Pool</div>
+        <div class="search-row"><input type="text" id="searchBox" placeholder="Search player or team…" oninput="renderPlayers()" /></div>
+        <div class="pos-filters">
+          <button class="pf active" onclick="setPos('',this)">All</button>
+          <button class="pf" onclick="setPos('QB',this)">QB</button>
+          <button class="pf" onclick="setPos('RB',this)">RB</button>
+          <button class="pf" onclick="setPos('WR',this)">WR</button>
+          <button class="pf" onclick="setPos('TE',this)">TE</button>
+          <button class="pf" onclick="setPos('LB',this)">LB</button>
+          <button class="pf" onclick="setPos('EDGE',this)">EDGE</button>
+          <button class="pf" onclick="setPos('DB',this)">DB</button>
+          <button class="pf" onclick="setPos('DL',this)">DL</button>
+        </div>
+      </div>
+      <div class="player-list" id="playerList"></div>
+    </div>
+    <div class="board">
+      <div class="board-tabs">
+        <button class="btab active" onclick="switchTab('pick',this)">By Pick</button>
+        <button class="btab" onclick="switchTab('team',this)">By Team</button>
+      </div>
+      <div class="board-content" id="boardContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PLAYERS = [
+  {name:"Jeremiyah Love",pos:"RB",team:"ARI",rank:1},
+  {name:"Carnell Tate",pos:"WR",team:"TEN",rank:2},
+  {name:"Jordyn Tyson",pos:"WR",team:"NO",rank:3},
+  {name:"Makai Lemon",pos:"WR",team:"PHI",rank:4},
+  {name:"Jadarian Price",pos:"RB",team:"SEA",rank:5},
+  {name:"KC Concepcion",pos:"WR",team:"CLE",rank:6},
+  {name:"Fernando Mendoza",pos:"QB",team:"LV",rank:7},
+  {name:"Omar Cooper Jr.",pos:"WR",team:"NYJ",rank:8},
+  {name:"Kenyon Sadiq",pos:"TE",team:"NYJ",rank:9},
+  {name:"Sonny Styles",pos:"LB",team:"WAS",rank:10},
+  {name:"Denzel Boston",pos:"WR",team:"CLE",rank:11},
+  {name:"Eli Stowers",pos:"TE",team:"PHI",rank:12},
+  {name:"David Bailey",pos:"EDGE",team:"NYJ",rank:13},
+  {name:"Jonah Coleman",pos:"RB",team:"DEN",rank:14},
+  {name:"Arvell Reese",pos:"LB",team:"NYG",rank:15},
+  {name:"Chris Bell",pos:"WR",team:"MIA",rank:16},
+  {name:"Antonio Williams",pos:"WR",team:"WAS",rank:17},
+  {name:"Malachi Fields",pos:"WR",team:"NYG",rank:18},
+  {name:"Rueben Bain Jr.",pos:"EDGE",team:"TB",rank:19},
+  {name:"Elijah Sarratt",pos:"WR",team:"IND",rank:20},
+  {name:"Emmett Johnson",pos:"RB",team:"KC",rank:21},
+  {name:"Ty Simpson",pos:"QB",team:"LAR",rank:22},
+  {name:"Dillon Thieneman",pos:"DB",team:"CIN",rank:23},
+  {name:"Zachariah Branch",pos:"WR",team:"ATL",rank:24},
+  {name:"Nicholas Singleton",pos:"RB",team:"TEN",rank:25},
+  {name:"Kaytron Allen",pos:"RB",team:"BAL",rank:26},
+  {name:"Chris Brazzell II",pos:"WR",team:"CAR",rank:27},
+  {name:"Germie Bernard",pos:"WR",team:"PIT",rank:28},
+  {name:"Josiah Trotter",pos:"LB",team:"TB",rank:29},
+  {name:"Max Klare",pos:"TE",team:"DET",rank:30},
+  {name:"Ja'Kobi Lane",pos:"WR",team:"LAC",rank:31},
+  {name:"Skyler Bell",pos:"WR",team:"DAL",rank:32},
+  {name:"Garrett Nussmeier",pos:"QB",team:"MIN",rank:33},
+  {name:"Kevin Winston Jr.",pos:"DB",team:"MIA",rank:34},
+  {name:"Demond Claiborne",pos:"RB",team:"SF",rank:35},
+  {name:"De'Zhaun Stribling",pos:"WR",team:"SF",rank:36},
+  {name:"Akeem Mesidor",pos:"EDGE",team:"LAC",rank:37},
+  {name:"Joe Royer",pos:"TE",team:"CIN",rank:38},
+  {name:"Caleb Downs",pos:"DB",team:"WAS",rank:39},
+  {name:"Adam Randall",pos:"RB",team:"HOU",rank:40},
+  {name:"Darius Alexander",pos:"DL",team:"DET",rank:41},
+  {name:"Justin Joly",pos:"TE",team:"SEA",rank:42},
+  {name:"Oscar Delp",pos:"TE",team:"DAL",rank:43},
+  {name:"Jack Endries",pos:"TE",team:"GB",rank:44},
+  {name:"Trey Amos",pos:"DB",team:"NO",rank:45},
+  {name:"Le'Veon Moss",pos:"RB",team:"NE",rank:46},
+  {name:"Walter Nolen",pos:"DL",team:"PHI",rank:47},
+  {name:"Drew Allar",pos:"QB",team:"JAX",rank:48},
+  {name:"Seth McGowan",pos:"RB",team:"BUF",rank:49},
+  {name:"Deion Burks",pos:"WR",team:"IND",rank:50},
+  {name:"Mike Washington Jr.",pos:"RB",team:"LV",rank:51},
+  {name:"Kevin Coleman Jr.",pos:"WR",team:"MIN",rank:52},
+  {name:"Mason Graham",pos:"DL",team:"CLE",rank:53},
+  {name:"Nick Emmanwori",pos:"DB",team:"CAR",rank:54},
+  {name:"James Pearce Jr.",pos:"EDGE",team:"CHI",rank:55},
+  {name:"TJ Lateef",pos:"LB",team:"HOU",rank:56},
+  {name:"Michael Trigg",pos:"TE",team:"MIA",rank:57},
+  {name:"Shemar Turner",pos:"LB",team:"DAL",rank:58},
+  {name:"Kenneth Grant",pos:"DL",team:"MIA",rank:59},
+  {name:"Cobee Bryant",pos:"DB",team:"KC",rank:60},
+  {name:"Landon Jackson",pos:"EDGE",team:"NE",rank:61},
+  {name:"Princely Umanmielen",pos:"EDGE",team:"MIN",rank:62},
+  {name:"Jam Miller",pos:"RB",team:"CHI",rank:63},
+  {name:"Carson Beck",pos:"QB",team:"ARI",rank:64},
+  {name:"Danny Striggow",pos:"LB",team:"KC",rank:65},
+  {name:"Tanner Koziol",pos:"TE",team:"NO",rank:66},
+];
+PLAYERS.sort((a,b)=>a.rank-b.rank);
+
+// Linear draft order (1→12 every round) with all trades applied
+const PICKS_TEMPLATE = [
+  {overall:1,round:1,pickInRound:1,originalOwner:"Levi",currentOwner:"Levi"},
+  {overall:2,round:1,pickInRound:2,originalOwner:"Tanner",currentOwner:"Tanner"},
+  {overall:3,round:1,pickInRound:3,originalOwner:"Morgan",currentOwner:"Mitch"},
+  {overall:4,round:1,pickInRound:4,originalOwner:"Jeremy",currentOwner:"Jeremy"},
+  {overall:5,round:1,pickInRound:5,originalOwner:"Kiece",currentOwner:"John"},
+  {overall:6,round:1,pickInRound:6,originalOwner:"Mason",currentOwner:"Tanner"},
+  {overall:7,round:1,pickInRound:7,originalOwner:"Mitch",currentOwner:"Mitch"},
+  {overall:8,round:1,pickInRound:8,originalOwner:"Tyler",currentOwner:"John"},
+  {overall:9,round:1,pickInRound:9,originalOwner:"Kolten",currentOwner:"Tyler"},
+  {overall:10,round:1,pickInRound:10,originalOwner:"Jayden",currentOwner:"Levi"},
+  {overall:11,round:1,pickInRound:11,originalOwner:"John",currentOwner:"Jeremy"},
+  {overall:12,round:1,pickInRound:12,originalOwner:"Jacob",currentOwner:"Kiece"},
+  {overall:13,round:2,pickInRound:1,originalOwner:"Levi",currentOwner:"Levi"},
+  {overall:14,round:2,pickInRound:2,originalOwner:"Tanner",currentOwner:"John"},
+  {overall:15,round:2,pickInRound:3,originalOwner:"Morgan",currentOwner:"Morgan"},
+  {overall:16,round:2,pickInRound:4,originalOwner:"Jeremy",currentOwner:"Jeremy"},
+  {overall:17,round:2,pickInRound:5,originalOwner:"Kiece",currentOwner:"Kiece"},
+  {overall:18,round:2,pickInRound:6,originalOwner:"Mason",currentOwner:"Mason"},
+  {overall:19,round:2,pickInRound:7,originalOwner:"Mitch",currentOwner:"Mitch"},
+  {overall:20,round:2,pickInRound:8,originalOwner:"Tyler",currentOwner:"Tanner"},
+  {overall:21,round:2,pickInRound:9,originalOwner:"Kolten",currentOwner:"Tyler"},
+  {overall:22,round:2,pickInRound:10,originalOwner:"Jayden",currentOwner:"Tanner"},
+  {overall:23,round:2,pickInRound:11,originalOwner:"John",currentOwner:"Levi"},
+  {overall:24,round:2,pickInRound:12,originalOwner:"Jacob",currentOwner:"Morgan"},
+  {overall:25,round:3,pickInRound:1,originalOwner:"Levi",currentOwner:"Levi"},
+  {overall:26,round:3,pickInRound:2,originalOwner:"Tanner",currentOwner:"Tanner"},
+  {overall:27,round:3,pickInRound:3,originalOwner:"Morgan",currentOwner:"Morgan"},
+  {overall:28,round:3,pickInRound:4,originalOwner:"Jeremy",currentOwner:"Jeremy"},
+  {overall:29,round:3,pickInRound:5,originalOwner:"Kiece",currentOwner:"Jeremy"},
+  {overall:30,round:3,pickInRound:6,originalOwner:"Mason",currentOwner:"Jeremy"},
+  {overall:31,round:3,pickInRound:7,originalOwner:"Mitch",currentOwner:"Tanner"},
+  {overall:32,round:3,pickInRound:8,originalOwner:"Tyler",currentOwner:"Tyler"},
+  {overall:33,round:3,pickInRound:9,originalOwner:"Kolten",currentOwner:"Kolten"},
+  {overall:34,round:3,pickInRound:10,originalOwner:"Jayden",currentOwner:"Tanner"},
+  {overall:35,round:3,pickInRound:11,originalOwner:"John",currentOwner:"Morgan"},
+  {overall:36,round:3,pickInRound:12,originalOwner:"Jacob",currentOwner:"Jeremy"},
+  {overall:37,round:4,pickInRound:1,originalOwner:"Levi",currentOwner:"Levi"},
+  {overall:38,round:4,pickInRound:2,originalOwner:"Tanner",currentOwner:"Jayden"},
+  {overall:39,round:4,pickInRound:3,originalOwner:"Morgan",currentOwner:"Morgan"},
+  {overall:40,round:4,pickInRound:4,originalOwner:"Jeremy",currentOwner:"Jeremy"},
+  {overall:41,round:4,pickInRound:5,originalOwner:"Kiece",currentOwner:"Kiece"},
+  {overall:42,round:4,pickInRound:6,originalOwner:"Mason",currentOwner:"Mason"},
+  {overall:43,round:4,pickInRound:7,originalOwner:"Mitch",currentOwner:"Mitch"},
+  {overall:44,round:4,pickInRound:8,originalOwner:"Tyler",currentOwner:"Kolten"},
+  {overall:45,round:4,pickInRound:9,originalOwner:"Kolten",currentOwner:"Kolten"},
+  {overall:46,round:4,pickInRound:10,originalOwner:"Jayden",currentOwner:"Jayden"},
+  {overall:47,round:4,pickInRound:11,originalOwner:"John",currentOwner:"John"},
+  {overall:48,round:4,pickInRound:12,originalOwner:"Jacob",currentOwner:"Jacob"},
+];
+
+const TEAM_ORDER = ["Levi","Tanner","Morgan","Jeremy","Kiece","Mason","Mitch","Tyler","Kolten","Jayden","John","Jacob"];
+
+let API_KEY='', BIN_ID='', shareUrl='';
+let picks=[], drafted=new Set(), activeTab='pick', posFilter='';
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const p=new URLSearchParams(location.search);
+  if(p.get('bin')&&p.get('key')){
+    BIN_ID=p.get('bin'); API_KEY=p.get('key');
+    fetchState().then(ok=>{if(ok)startApp();});
+  }
+});
+
+async function createDraft(){
+  API_KEY=document.getElementById('apiKey').value.trim();
+  const err=document.getElementById('createError');
+  err.style.display='none';
+  if(!API_KEY){showErr(err,'Enter your Access Key.');return;}
+  picks=PICKS_TEMPLATE.map(p=>({...p,player:null}));
+  drafted=new Set();
+  try{
+    const res=await fetch('https://api.jsonbin.io/v3/b',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Master-Key':API_KEY,'X-Bin-Name':'RookieDraft2026'},
+      body:JSON.stringify({picks})
+    });
+    const data=await res.json();
+    if(!res.ok){showErr(err,data.message||'Failed — check your key.');return;}
+    BIN_ID=data.metadata.id;
+    // Build https share URL using current page origin (works when hosted)
+    const base=location.origin+location.pathname;
+    shareUrl=`${base}?bin=${BIN_ID}&key=${encodeURIComponent(API_KEY)}`;
+    const box=document.getElementById('shareBox');
+    box.style.display='block'; box.textContent=shareUrl;
+    document.getElementById('copyBtn').style.display='inline-block';
+    startApp();
+  }catch(e){showErr(err,'Network error — check your key.');}
+}
+
+async function joinDraft(){
+  BIN_ID=document.getElementById('joinBinId').value.trim();
+  API_KEY=document.getElementById('joinKey').value.trim();
+  const err=document.getElementById('joinError');
+  err.style.display='none';
+  if(!BIN_ID||!API_KEY){showErr(err,'Enter both fields.');return;}
+  const ok=await fetchState();
+  if(ok)startApp();
+  else showErr(err,'Could not load draft. Check Bin ID and key.');
+}
+
+function showErr(el,msg){el.textContent=msg;el.style.display='block';}
+function copyUrl(){navigator.clipboard.writeText(shareUrl).then(()=>{document.getElementById('copyBtn').textContent='Copied!';setTimeout(()=>document.getElementById('copyBtn').textContent='Copy Share Link',2000);});}
+function showShare(){
+  const base=location.origin+location.pathname;
+  const url=`${base}?bin=${BIN_ID}&key=${encodeURIComponent(API_KEY)}`;
+  prompt('Share this link with your league:',url);
+}
+
+async function fetchState(){
+  try{
+    const res=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{headers:{'X-Master-Key':API_KEY}});
+    if(!res.ok)return false;
+    const data=await res.json();
+    picks=data.record.picks;
+    drafted=new Set(picks.filter(p=>p.player).map(p=>p.player.name));
+    return true;
+  }catch{return false;}
+}
+
+async function pushState(){
+  setSyncDot('syncing');
+  try{
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},
+      body:JSON.stringify({picks})
+    });
+    setSyncDot('ok');
+  }catch{setSyncDot('error');}
+}
+
+function setSyncDot(s){
+  const d=document.getElementById('syncDot');
+  d.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
+  d.title=s==='ok'?'Synced':s==='syncing'?'Saving…':'Sync error';
+}
+
+function startApp(){
+  document.getElementById('setupScreen').style.display='none';
+  document.getElementById('draftApp').style.display='flex';
+  render();
+  setInterval(async()=>{const ok=await fetchState();if(ok)render();},4000);
+}
+
+function currentSlot(){return picks.find(p=>!p.player);}
+
+async function draftPlayer(idx){
+  const slot=currentSlot();
+  if(!slot)return;
+  const pl=PLAYERS[idx];
+  if(drafted.has(pl.name))return;
+  slot.player=pl; drafted.add(pl.name);
+  render(); await pushState();
+}
+
+async function undoPick(overall){
+  const slot=picks.find(p=>p.overall===overall);
+  if(!slot||!slot.player)return;
+  drafted.delete(slot.player.name); slot.player=null;
+  render(); await pushState();
+}
+
+function render(){renderClock();renderPlayers();renderBoard();}
+
+function renderClock(){
+  const slot=currentSlot();
+  const el=document.getElementById('clockBadge');
+  if(!slot){el.textContent='Draft Complete! 🎉';el.className='clock-badge done';}
+  else{
+    const lbl=`${slot.round}.${String(slot.pickInRound).padStart(2,'0')}`;
+    el.textContent=`Pick ${lbl} · ${slot.currentOwner} on the clock`;
+    el.className='clock-badge';
+  }
+}
+
+function setPos(pos,el){
+  posFilter=pos;
+  document.querySelectorAll('.pf').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); renderPlayers();
+}
+
+function renderPlayers(){
+  const q=document.getElementById('searchBox').value.toLowerCase();
+  const list=document.getElementById('playerList');
+  const filtered=PLAYERS.map((p,i)=>({...p,idx:i})).filter(p=>{
+    if(posFilter&&p.pos!==posFilter)return false;
+    if(q&&!p.name.toLowerCase().includes(q)&&!p.team.toLowerCase().includes(q))return false;
+    return true;
+  });
+  if(!filtered.length){list.innerHTML='<div class="empty-msg">No players match</div>';return;}
+  list.innerHTML=filtered.map(p=>`
+    <div class="player-row ${drafted.has(p.name)?'drafted':''}" onclick="draftPlayer(${p.idx})">
+      <span class="rank">#${p.rank}</span>
+      <span class="pos-badge pos-${p.pos}">${p.pos}</span>
+      <span class="pname">${p.name}</span>
+      <span class="pteam">${p.team}</span>
+      ${!drafted.has(p.name)?`<button class="draft-btn" onclick="event.stopPropagation();draftPlayer(${p.idx})">Draft</button>`:''}
+    </div>`).join('');
+}
+
+function pickLabel(p){return `${p.round}.${String(p.pickInRound).padStart(2,'0')}`;}
+
+function switchTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); renderBoard();
+}
+
+function renderBoard(){
+  const el=document.getElementById('boardContent');
+  const cur=currentSlot();
+  if(activeTab==='pick'){
+    let html='',lastR=0;
+    picks.forEach(p=>{
+      if(p.round!==lastR){
+        if(lastR)html+='</div></div>';
+        html+=`<div class="round-block"><div class="round-title">Round ${p.round}</div><div class="pick-grid">`;
+        lastR=p.round;
+      }
+      const isCur=cur&&p.overall===cur.overall;
+      const isTraded=p.originalOwner!==p.currentOwner;
+      html+=`<div class="pick-card ${isCur?'current':''} ${isTraded&&!p.player?'traded-in':''}">
+        <div class="pick-top">
+          <span class="pick-lbl">${pickLabel(p)}</span>
+          <span class="pick-owner">${p.currentOwner}</span>
+          ${isTraded?`<span class="pick-orig">via ${p.originalOwner}</span>`:''}
+          ${p.player?`<button class="undo-x" onclick="undoPick(${p.overall})">✕</button>`:''}
+        </div>
+        ${p.player
+          ?`<div style="display:flex;gap:5px;align-items:center;margin-top:3px;"><span class="pos-badge pos-${p.player.pos}">${p.player.pos}</span></div>
+            <div class="pick-player-name">${p.player.name}</div>
+            <div class="pick-nfl">${p.player.team}</div>`
+          :`<div class="pick-empty">${isCur?'⚡ On the clock':'—'}</div>`}
+      </div>`;
+    });
+    if(lastR)html+='</div></div>';
+    el.innerHTML=html;
+  } else {
+    const teams={};
+    picks.forEach(p=>{
+      if(!teams[p.currentOwner])teams[p.currentOwner]=[];
+      teams[p.currentOwner].push(p);
+    });
+    let html='<div class="team-grid">';
+    TEAM_ORDER.forEach(name=>{
+      const tPicks=(teams[name]||[]).sort((a,b)=>a.overall-b.overall);
+      html+=`<div class="team-card"><div class="team-card-name">${name}</div>`;
+      if(!tPicks.length){html+=`<div class="empty-team">No picks</div>`;}
+      else{
+        tPicks.forEach(p=>{
+          const isTraded=p.originalOwner!==p.currentOwner;
+          if(p.player){
+            html+=`<div class="team-pick-row">
+              <span class="tp-lbl">${pickLabel(p)}</span>
+              ${isTraded?`<span class="tp-orig">via ${p.originalOwner}</span>`:''}
+              <span class="pos-badge pos-${p.player.pos}">${p.player.pos}</span>
+              <span class="pname">${p.player.name}</span>
+              <span class="pteam" style="margin-left:auto">${p.player.team}</span>
+            </div>`;
+          } else {
+            html+=`<div class="team-pick-row" style="opacity:.4">
+              <span class="tp-lbl">${pickLabel(p)}</span>
+              ${isTraded?`<span class="tp-orig">via ${p.originalOwner}</span>`:''}
+              <span class="pname" style="color:var(--text3)">—</span>
+            </div>`;
+          }
+        });
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+    el.innerHTML=html;
+  }
+}
+</script>
+</body>
+</html>
